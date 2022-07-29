@@ -19,9 +19,9 @@ with open(args.infile, 'r') as inf:
         r = r.strip()
         d = d.strip()
         if q in q_docs:
-            q_docs[q][d] = r
+            q_docs[q].append({d: r})
         else:
-            q_docs[q] = {d: r}
+            q_docs[q] = [{d: r}]
 
 with open(args.outfile, 'w') as outf:
     json.dump(q_docs, outf)
