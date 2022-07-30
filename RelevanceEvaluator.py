@@ -10,6 +10,7 @@ class RelevanceEvaluator:
         precision = None
         recall = None
         map = None
+        rr = None
 
         if "percision" in self.measures:
             precision = self._get_precision(run, precision_k)
@@ -19,6 +20,8 @@ class RelevanceEvaluator:
             if precision is None:
                 precision = self._get_precision(run, precision_k)
             map = self._get_map(precision)
+        if 'rr' in self.measures:
+            rr = self._get_reciprocal_rank(run)
 
     def _get_precision(self, run, k=1000):
         q_prec = {}
@@ -64,6 +67,7 @@ class RelevanceEvaluator:
                 if first_rel == list(r.keys())[0]:
                     q_rr[q] = 1/index
                     flag = True
+                    break
             if flag == False:
                 q_rr[q] = 0
         return q_rr
