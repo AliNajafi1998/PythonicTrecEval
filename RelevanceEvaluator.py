@@ -6,10 +6,19 @@ class RelevanceEvaluator:
         self.qrels = qrels
         self.measures = measures
 
-    def evaluate(self, run):
-        for measure in measure:
-            # do the evaluation
-            pass
+    def evaluate(self, run, precision_k=1000, recall_k=1000):
+        precision = None
+        recall = None
+        map = None
+
+        if "percision" in self.measures:
+            precision = self._get_precision(run, precision_k)
+        if "recall" in self.measures:
+            recall = self._get_recall(run, recall_k)
+        if "map" in self.measures:
+            if precision is None:
+                precision = self._get_precision(run, precision_k)
+            map = self._get_map(precision)
 
     def _get_precision(self, run, k=1000):
         q_prec = {}
@@ -41,5 +50,5 @@ class RelevanceEvaluator:
             q_recall[q] = rec/len(qrels)
         return q_recall
 
-    def _get_map(self):
-        pass
+    def _get_map(self, q_precision):
+        return sum(q_precision.values()) / len(q_precision)
