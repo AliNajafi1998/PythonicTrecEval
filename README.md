@@ -5,5 +5,5 @@
  - [x] Precision
  - [x] Recall
  - [ ] Reciprocal rank (RR)
- - [ ] Average Precision (AP)
+ - [x] Average Precision (AP)
  - [ ] Normalized Discounted Cumulative Gain (nDCG) 
