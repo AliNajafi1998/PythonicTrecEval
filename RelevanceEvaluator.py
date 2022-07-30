@@ -52,3 +52,18 @@ class RelevanceEvaluator:
 
     def _get_map(self, q_precision):
         return sum(q_precision.values()) / len(q_precision)
+
+    def _get_reciprocal_rank(self, run):
+        q_rr = {}
+        for q in run:
+            rankded_list: List = run[q]
+            first_rel = list(self.qrels[0].keys())[0]
+            flag = False
+            for index, r in enumerate(rankded_list):
+                index += 1
+                if first_rel == list(r.keys())[0]:
+                    q_rr[q] = 1/index
+                    flag = True
+            if flag == False:
+                q_rr[q] = 0
+        return q_rr
