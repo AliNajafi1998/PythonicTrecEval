@@ -12,7 +12,7 @@ class RelevanceEvaluator:
         map = None
         rr = None
 
-        if "percision" in self.measures:
+        if "precision" in self.measures:
             precision = self._get_precision(run, precision_k)
         if "recall" in self.measures:
             recall = self._get_recall(run, recall_k)
@@ -22,6 +22,12 @@ class RelevanceEvaluator:
             map = self._get_map(precision)
         if 'rr' in self.measures:
             rr = self._get_reciprocal_rank(run)
+        return {
+            f"recall_{recall_k}": recall,
+            f"precision_{precision_k}": precision,
+            "mean average percision": map,
+            "reciprocal rank": rr
+        }
 
     def _get_precision(self, run, k=1000):
         q_prec = {}
@@ -60,7 +66,7 @@ class RelevanceEvaluator:
         q_rr = {}
         for q in run:
             rankded_list: List = run[q]
-            first_rel = list(self.qrels[0].keys())[0]
+            first_rel = list(self.qrels[q][0].keys())[0]
             flag = False
             for index, r in enumerate(rankded_list):
                 index += 1
@@ -71,3 +77,35 @@ class RelevanceEvaluator:
             if flag == False:
                 q_rr[q] = 0
         return q_rr
+
+    def _get_ndcg(self, run):
+        pass
+
+
+if __name__ == "__main__":
+    # tests for each of the methods
+    qrel = {
+        'q1': [
+            {'d1': 1},
+            {'d2': 1},
+            {'d3': 1},
+        ],
+        'q2': [
+            {'d1': 1},
+            {'d3': 1},
+        ],
+    }
+
+    run = {
+        'q1': [
+            {'d2': 1.0},
+            {'d1': 1.0},
+            {'d3': 1.5},
+        ],
+        'q2': [
+            {'d1': 1.5},
+        ]
+    }
+
+    evaluator = RelevanceEvaluator(qrel, ['precision', 'recall', 'map', 'rr'])
+    print(evaluator.evaluate(run, 2))
