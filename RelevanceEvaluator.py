@@ -1,3 +1,4 @@
+import math
 from typing import List
 
 
@@ -6,11 +7,12 @@ class RelevanceEvaluator:
         self.qrels = qrels
         self.measures = measures
 
-    def evaluate(self, run, precision_k=1000, recall_k=1000):
+    def evaluate(self, run, precision_k=1000, recall_k=1000, ndcg_k=1000):
         precision = None
         recall = None
         map = None
         rr = None
+        ndcg = None
 
         if "precision" in self.measures:
             precision = self._get_precision(run, precision_k)
@@ -22,11 +24,14 @@ class RelevanceEvaluator:
             map = self._get_map(precision)
         if 'rr' in self.measures:
             rr = self._get_reciprocal_rank(run)
+        if 'ndcg' in self.measures:
+            ndcg = self._get_ndcg(run, ndcg_k)
         return {
             f"recall_{recall_k}": recall,
             f"precision_{precision_k}": precision,
             "mean average percision": map,
-            "reciprocal rank": rr
+            "reciprocal rank": rr,
+            f"ndcg_{ndcg_k}": ndcg
         }
 
     def _get_precision(self, run, k=1000):
@@ -78,8 +83,26 @@ class RelevanceEvaluator:
                 q_rr[q] = 0
         return q_rr
 
-    def _get_ndcg(self, run):
-        pass
+    def _get_ndcg(self, run, k=1000):
+        q_ndcg = {}
+        for q in run:
+            qrels = self.qrels[q][:k]
+            rankded_list: List = run[q][:k]
+            dcg = 0
+            for index, r in enumerate(rankded_list):
+                index += 1
+                dcg += (math.pow(2, float(list(r.values())
+                        [0]) - 1)) / math.log2(index + 1)
+
+            idcg = 0
+            ideal_list = [float(list(r.values())[0]) for r in qrels]
+            ideal_list.sort(reverse=True)
+            for i, r in enumerate(ideal_list):
+                i += 1
+                idcg += (math.pow(2, r - 1)) / math.log2(i + 1)
+            ndcg = dcg/idcg
+            q_ndcg[q] = ndcg
+        return q_ndcg
 
 
 if __name__ == "__main__":
@@ -87,7 +110,7 @@ if __name__ == "__main__":
     qrel = {
         'q1': [
             {'d1': 1},
-            {'d2': 1},
+            {'d2': 2},
             {'d3': 1},
         ],
         'q2': [
@@ -100,12 +123,13 @@ if __name__ == "__main__":
         'q1': [
             {'d2': 1.0},
             {'d1': 1.0},
-            {'d3': 1.5},
+            {'d3': 1.0},
         ],
         'q2': [
-            {'d1': 1.5},
+            {'d1': 1},
         ]
     }
 
-    evaluator = RelevanceEvaluator(qrel, ['precision', 'recall', 'map', 'rr'])
+    evaluator = RelevanceEvaluator(
+        qrel, ['precision', 'recall', 'map', 'rr', 'ndcg'])
     print(evaluator.evaluate(run, 2))
