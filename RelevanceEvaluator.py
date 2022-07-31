@@ -12,6 +12,7 @@ class RelevanceEvaluator:
         recall = None
         map = None
         rr = None
+        mrr = None
         ndcg = None
 
         if "precision" in self.measures:
@@ -24,6 +25,10 @@ class RelevanceEvaluator:
             map = self._get_map(precision)
         if 'rr' in self.measures:
             rr = self._get_reciprocal_rank(run)
+        if 'mrr' in self.measures:
+            if rr is None:
+                rr = self._get_reciprocal_rank(run)
+            mrr = self._get_mrr(rr)
         if 'ndcg' in self.measures:
             ndcg = self._get_ndcg(run, ndcg_k)
         return {
@@ -31,7 +36,9 @@ class RelevanceEvaluator:
             f"precision_{precision_k}": precision,
             "mean average percision": map,
             "reciprocal rank": rr,
+            "MRR": mrr,
             f"ndcg_{ndcg_k}": ndcg
+
         }
 
     def _get_precision(self, run, k=1000):
@@ -104,6 +111,9 @@ class RelevanceEvaluator:
             q_ndcg[q] = ndcg
         return q_ndcg
 
+    def _get_mrr(self, q_r):
+        return sum(q_r.values()) / len(q_r)
+
 
 if __name__ == "__main__":
     # tests for each of the methods
@@ -131,5 +141,5 @@ if __name__ == "__main__":
     }
 
     evaluator = RelevanceEvaluator(
-        qrel, ['precision', 'recall', 'map', 'rr', 'ndcg'])
+        qrel, ['precision', 'recall', 'map', 'rr', 'ndcg','mrr'])
     print(evaluator.evaluate(run, 2))
